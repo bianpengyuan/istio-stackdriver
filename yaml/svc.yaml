@@ -1,0 +1,120 @@
+##################################################################################################
+# Svc A
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-a
+  labels:
+    app: svc-a
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    app: svc-a
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: svc-a
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: svc-a
+    spec:
+      containers:
+      - name: svc-a
+        image: gcr.io/csm-metrics-test/svc-a:v4
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+---
+##################################################################################################
+# Svc B
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-b
+  labels:
+    app: svc-b
+spec:
+  ports:
+  - port: 50051
+    name: grpc
+  selector:
+    app: svc-b
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: svc-b
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: svc-b
+    spec:
+      containers:
+      - name: svc-b
+        image: gcr.io/csm-metrics-test/svc-b:v4
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+---
+##################################################################################################
+# Svc C
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-c
+  labels:
+    app: svc-c
+spec:
+  ports:
+  - port: 23333
+    name: tcp
+  selector:
+    app: svc-c
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: svc-c
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: svc-c
+    spec:
+      containers:
+      - name: svc-c
+        image: gcr.io/csm-metrics-test/svc-c:v4
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 23333
+---
+###########################################################################
+# Ingress resource (gateway)
+##########################################################################
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gateway
+  annotations:
+    kubernetes.io/ingress.class: "istio"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: svc-a
+          servicePort: 8080
+---
