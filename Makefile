@@ -30,7 +30,7 @@ export GOARCH ?= $(GOARCH_LOCAL)
 
 export ISTIO_OUT:=$(GO_TOP)/out/$(GOOS)_$(GOARCH)/$(BUILDTYPE_DIR)
 
-docker: docker.svcA docker.svcB docker.svcC
+docker: docker.pinger docker.svcA docker.svcB docker.svcC
 
 docker.svcA: svcA/Dockerfile
 	cd svcA && go build && docker build -t $(HUB)/svc-a:$(TAG) -f Dockerfile .
@@ -41,13 +41,21 @@ docker.svcB: svcB/Dockerfile
 docker.svcC: svcC/Dockerfile
 	cd svcC && go build && docker build -t $(HUB)/svc-c:$(TAG) -f Dockerfile .
 
+docker.pinger: pinger/Dockerfile
+	cd pinger && go build && docker build -t $(HUB)/pinger:$(TAG) -f Dockerfile .
+
 docker.push:
 	gcloud docker -- push $(HUB)/svc-a:$(TAG)
 	gcloud docker -- push $(HUB)/svc-b:$(TAG)
 	gcloud docker -- push $(HUB)/svc-c:$(TAG)
+	gcloud docker -- push $(HUB)/pinger:$(TAG)
 
 deploy:
-	kubectl apply -f <(${ISTIO_OUT}/istioctl kube-inject -f yaml/svc.yaml --hub=${ISTIO_HUB} --tag=${ISTIO_TAG})
+	kubectl apply -f <(${ISTIO_OUT}/istioctl kube-inject -f yaml/svc.yaml --hub=${ISTIO_HUB} --tag=${ISTIO_TAG}) && \
+	kubectl apply -f yaml/pinger.yaml && \
+	kubectl apply -f yaml/metric.yaml
 
 clean:
-	kubectl delete -f yaml/svc.yaml
+	kubectl delete -f yaml/svc.yaml && \
+	kubectl delete -f yaml/pinger.yaml && \
+	kubectl delete -f yaml/metric.yaml
