@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	pb "istio-stackdriver/helloworld"
 )
 
@@ -34,6 +35,12 @@ func (s *server) visitSvcC() (string, error) {
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		log.Printf("request metadata is: %v", md)
+	} else {
+		log.Printf("cannot get metdadata: %v", ok)
+	}
 	m := "Hello " + in.Name + "\n"
 	if cm, err := s.visitSvcC(); err != nil {
 		return nil, fmt.Errorf("failed to get response from svcC: %v", err)

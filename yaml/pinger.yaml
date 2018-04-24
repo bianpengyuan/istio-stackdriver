@@ -51,6 +51,6 @@ spec:
       serviceAccountName: pinger-service-account
       containers:
       - name: pinger
-        image: gcr.io/csm-metrics-test/pinger:2333
+        image: gcr.io/csm-metrics-test/pinger:test-8
         imagePullPolicy: IfNotPresent
 ---

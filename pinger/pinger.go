@@ -50,13 +50,16 @@ func getIngressIP() string {
 func main() {
 	ip := getIngressIP()
 	log.Printf("the ip address of gateway is %v", ip)
-	rate := time.Second / 10
+	rate := time.Second * 10
 	throttle := time.Tick(rate)
 	for {
 		<-throttle
-		_, err := http.Get("http://" + ip + "/")
-		if err != nil {
-			log.Printf("Error http request %v", err)
-		}
+		go func() {
+			resp, err := http.Get("http://" + ip + "/")
+			defer resp.Body.Close()
+			if err != nil {
+				log.Printf("Error http request %v", err)
+			}
+		}()
 	}
 }
