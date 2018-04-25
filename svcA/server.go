@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"flag"
 	"fmt"
 	"golang.org/x/net/context"
@@ -15,9 +14,8 @@ import (
 	openzipkin "github.com/openzipkin/zipkin-go"
 	zrh "github.com/openzipkin/zipkin-go/reporter/http"
 	"go.opencensus.io/exporter/zipkin"
+	b3 "go.opencensus.io/plugin/ochttp/propagation/b3"
 	"go.opencensus.io/trace"
-	// 	"go.opencensus.io/exporter/stackdriver"
-	//	"go.opencensus.io/trace"
 )
 
 var (
@@ -45,66 +43,19 @@ func extractHeaders(r *http.Request) map[string]string {
 	return ret
 }
 
-func buildTraceID(s string) ([16]byte, error) {
-	tid := [16]byte{}
-
-	l := hex.DecodedLen(len(s))
-	decoded, err := hex.DecodeString(s)
-
-	if err != nil {
-		return tid, err
-	}
-	for i := 0; i < 16; i++ {
-		if i < l {
-			tid[i] = 0
-		} else {
-			tid[i] = decoded[i-l]
-		}
-	}
-	return tid, err
-}
-
-func buildSpanID(s string) ([8]byte, error) {
-	sid := [8]byte{}
-
-	l := hex.DecodedLen(len(s))
-	decoded, err := hex.DecodeString(s)
-
-	if err != nil {
-		return sid, err
-	}
-	for i := 0; i < 8; i++ {
-		if i < l {
-			sid[i] = 0
-		} else {
-			sid[i] = decoded[i-l]
-		}
-	}
-	return sid, nil
-}
-
-func execWorkflow(headers map[string]string) {
-	tid, err := buildTraceID(headers["x-b3-traceid"])
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	sid, err := buildSpanID(headers["x-b3-spanid"])
-	if err != nil {
-		fmt.Println(err)
+func execWorkflow(req *http.Request) {
+	f := &b3.HTTPFormat{}
+	p, ok := f.SpanContextFromRequest(req)
+	if !ok {
+		fmt.Println("Cannot parse http request with b3 format")
 		return
 	}
 
-	p := trace.SpanContext{
-		TraceID: tid,
-		SpanID:  sid,
-	}
-	ctx, span := trace.StartSpanWithRemoteParent(context.Background(), "workflow", p)
-	span.spanContext.SpanID = sid
-	_, span1 := trace.StartSpan(ctx, "foo")
+	ctx, span := trace.StartSpanWithRemoteParent(context.Background(), "svc-a-foo", p)
+	_, span1 := trace.StartSpan(ctx, "svc-a-bar")
 	time.Sleep(50 * time.Millisecond)
 	span1.End()
-	_, span2 := trace.StartSpan(ctx, "bar")
+	_, span2 := trace.StartSpan(ctx, "svc-a-baz")
 	time.Sleep(50 * time.Millisecond)
 	span2.End()
 	span.End()
@@ -134,14 +85,14 @@ func svcBGreeting(req *http.Request) (string, error) {
 		return "", fmt.Errorf("could not greet: %v", err)
 	}
 
-	execWorkflow(eh)
+	execWorkflow(req)
 	return r.Message, nil
 }
 
 func EchoHandler(writer http.ResponseWriter, request *http.Request) {
-	writer.Write([]byte("Hello this is svcA\n"))
+	writer.Write([]byte("svcA\n"))
 	if m, err := svcBGreeting(request); err == nil {
-		writer.Write([]byte("Greeting from svcB: " + m + "\n"))
+		writer.Write([]byte(m + "\n"))
 	} else {
 		log.Printf("%v", err)
 	}
@@ -168,16 +119,6 @@ func main() {
 
 	// For example purposes, sample every trace.
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-
-	//	exporter, err := stackdriver.NewExporter(stackdriver.Options{
-	//		ProjectID:            "csm-metrics-test",
-	//		BundleDelayThreshold: time.Second / 10,
-	//		BundleCountThreshold: 10})
-	//	if err != nil {
-	//		log.Println(err)
-	//	}
-	//	trace.RegisterExporter(exporter)
-	//	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	http.ListenAndServe(":"+*port, nil)
 }

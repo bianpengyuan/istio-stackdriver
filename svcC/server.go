@@ -44,7 +44,7 @@ func handleRequest(conn net.Conn) {
 		fmt.Println("Error reading:", err.Error())
 	}
 	// Send a response back to person contacting us.
-	conn.Write([]byte("Message received by svcC.\n"))
+	conn.Write([]byte("svcC.\n"))
 	// Close the connection when you're done with it.
 	conn.Close()
 }
