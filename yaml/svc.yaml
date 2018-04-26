@@ -39,8 +39,8 @@ spec:
     spec:
       containers:
       - name: svc-a
-        image: gcr.io/csm-metrics-test/svc-a
-        imagePullPolicy: IfNotPresent
+        image: gcr.io/csm-metrics-test/svc-a:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         args:
@@ -76,8 +76,8 @@ spec:
     spec:
       containers:
       - name: svc-b
-        image: gcr.io/csm-metrics-test/svc-b
-        imagePullPolicy: IfNotPresent
+        image: gcr.io/csm-metrics-test/svc-b:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 50051
 ---
@@ -110,8 +110,8 @@ spec:
     spec:
       containers:
       - name: svc-c
-        image: gcr.io/csm-metrics-test/svc-c
-        imagePullPolicy: IfNotPresent
+        image: gcr.io/csm-metrics-test/svc-c:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 23333
 ---

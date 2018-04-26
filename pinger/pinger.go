@@ -50,7 +50,7 @@ func getIngressIP() string {
 func main() {
 	ip := getIngressIP()
 	log.Printf("the ip address of gateway is %v", ip)
-	rate := time.Second * 10
+	rate := time.Second / 10
 	throttle := time.Tick(rate)
 	for {
 		<-throttle

@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	pb "istio-stackdriver/helloworld"
 	"log"
+	"math/rand"
 	http "net/http"
 	"time"
 
@@ -90,6 +91,14 @@ func svcBGreeting(req *http.Request) (string, error) {
 }
 
 func EchoHandler(writer http.ResponseWriter, request *http.Request) {
+	r := rand.Intn(10)
+	if r < 3 {
+		http.Error(writer, "error", http.StatusForbidden)
+		return
+	} else if r >= 3 && r < 7 {
+		http.Error(writer, "error", http.StatusNotFound)
+		return
+	}
 	writer.Write([]byte("svcA\n"))
 	if m, err := svcBGreeting(request); err == nil {
 		writer.Write([]byte(m + "\n"))

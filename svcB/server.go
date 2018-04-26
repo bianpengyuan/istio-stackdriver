@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"math/rand"
 	// "encoding/hex"
 	"flag"
 	"fmt"
@@ -154,19 +155,23 @@ func (s *server) visitSvcC() (string, error) {
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	m := "SvcB\n"
-	if cm, err := s.visitSvcC(); err != nil {
-		return nil, fmt.Errorf("failed to get response from svcC: %v", err)
+	r := rand.Intn(10)
+	if r < 5 {
+		if cm, err := s.visitSvcC(); err != nil {
+			return nil, fmt.Errorf("failed to get response from svcC: %v", err)
+		} else {
+			m += cm
+		}
 	} else {
-		m += cm
-	}
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, fmt.Errorf("failed to get grpc context")
-	}
-	if gm, err := s.visitGoogle(md); err != nil {
-		return nil, fmt.Errorf("failed to visit google.com")
-	} else {
-		m += gm + "\n"
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, fmt.Errorf("failed to get grpc context")
+		}
+		if gm, err := s.visitGoogle(md); err != nil {
+			return nil, fmt.Errorf("failed to visit google.com")
+		} else {
+			m += gm + "\n"
+		}
 	}
 	// execWorkflow(md)
 	return &pb.HelloReply{Message: m}, nil
