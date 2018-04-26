@@ -1,15 +1,3 @@
----
-apiVersion: config.istio.io/v1alpha2
-kind: EgressRule
-metadata:
-  name: google-egress-rule
-spec:
-  destination:
-    service: www.google.com
-  ports:
-    - port: 443
-      protocol: https
----
 apiVersion: "config.istio.io/v1alpha2"
 kind: kubernetes
 metadata:
@@ -20,7 +8,6 @@ spec:
   source_uid: source.uid | ""
   source_ip: source.ip | ip("0.0.0.0") # default to unspecified ip addr
   destination_uid: destination.uid | ""
-  destination_port: destination.port | 0
   origin_uid: '""'
   origin_ip: ip("0.0.0.0") # default to unspecified ip addr
   attribute_bindings:
@@ -38,7 +25,6 @@ spec:
     destination.service: $out.destination_service | "unknown"
     destination.serviceAccount: $out.destination_service_account_name | "unknown"
     destination.podName: $out.destination_pod_name | "unknown"
-    destination.containerName: $out.destination_container_name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
 kind: attributemanifest
@@ -63,7 +49,6 @@ metadata:
   namespace: istio-system
 spec:
   push_interval: 10s
-  project_id: csm-metrics-test
   metricInfo:
     server-request-count.metric.istio-system:
       # Due to a bug in gogoproto deserialization, Enums in maps must be
@@ -175,10 +160,10 @@ spec:
   monitoredResourceDimensions:
     # When using the global MR, this must be filled in, preferably matching the
     # project_id given above in stackdriver config.
-    project_id: '"csm-metrics-test"'
-    cluster_name: '"istio-stackdriver"'
+    project_id: '""'
+    cluster_name: '""'
     namespace_name: destination.namespace | "unknown"
-    location: '"us-central1-a"'
+    location: '""'
     container_name: destination.containerName | "unknown"
     pod_name: destination.podName | "unknown"
 ---
@@ -205,10 +190,10 @@ spec:
   monitoredResourceDimensions:
     # When using the global MR, this must be filled in, preferably matching the
     # project_id given above in stackdriver config.
-    project_id: '"csm-metrics-test"'
-    cluster_name: '"istio-stackdriver"'
+    project_id: '""'
+    cluster_name: '""'
     namespace_name: destination.namespace | "unknown"
-    location: '"us-central1-a"'
+    location: '""'
     container_name: destination.containerName | "unknown"
     pod_name: destination.podName | "unknown"
 ---
@@ -235,10 +220,10 @@ spec:
   monitoredResourceDimensions:
     # When using the global MR, this must be filled in, preferably matching the
     # project_id given above in stackdriver config.
-    project_id: '"csm-metrics-test"'
-    cluster_name: '"istio-stackdriver"'
+    project_id: '""'
+    cluster_name: '""'
     namespace_name: destination.namespace | "unknown"
-    location: '"us-central1-a"'
+    location: '""'
     container_name: destination.containerName | "unknown"
     pod_name: destination.podName | "unknown"
 ---
@@ -265,10 +250,10 @@ spec:
   monitoredResourceDimensions:
     # When using the global MR, this must be filled in, preferably matching the
     # project_id given above in stackdriver config.
-    project_id: '"csm-metrics-test"'
-    cluster_name: '"istio-stackdriver"'
+    project_id: '""'
+    cluster_name: '""'
     namespace_name: destination.namespace | "unknown"
-    location: '"us-central1-a"'
+    location: '""'
     container_name: destination.containerName | "unknown"
     pod_name: destination.podName | "unknown"
 ---
@@ -291,10 +276,10 @@ spec:
   monitoredResourceDimensions:
     # When using the global MR, this must be filled in, preferably matching the
     # project_id given above in stackdriver config.
-    project_id: '"csm-metrics-test"'
-    cluster_name: '"istio-stackdriver"'
+    project_id: '""'
+    cluster_name: '""'
     namespace_name: destination.namespace | "unknown"
-    location: '"us-central1-a"'
+    location: '""'
     container_name: destination.containerName | "unknown"
     pod_name: destination.podName | "unknown"
 ---
@@ -317,9 +302,9 @@ spec:
   monitoredResourceDimensions:
     # When using the global MR, this must be filled in, preferably matching the
     # project_id given above in stackdriver config.
-    project_id: '"csm-metrics-test"'
-    cluster_name: '"istio-stackdriver"'
+    project_id: '""'
+    cluster_name: '""'
     namespace_name: destination.namespace | "unknown"
-    location: '"us-central1-a"'
+    location: '""'
     container_name: destination.containerName | "unknown"
     pod_name: destination.podName | "unknown"

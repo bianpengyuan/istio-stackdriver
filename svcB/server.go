@@ -139,6 +139,7 @@ func (s *server) visitGoogle(md metadata.MD) (string, error) {
 
 func (s *server) visitSvcC() (string, error) {
 	conn, err := net.Dial("tcp", "svc-c:23333")
+	defer conn.Close()
 	if err != nil {
 		return "", fmt.Errorf("unable to build connection with svcC: %v", err)
 	}
@@ -156,7 +157,7 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 	if cm, err := s.visitSvcC(); err != nil {
 		return nil, fmt.Errorf("failed to get response from svcC: %v", err)
 	} else {
-		m += cm + "\n"
+		m += cm
 	}
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

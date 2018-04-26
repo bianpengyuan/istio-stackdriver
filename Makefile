@@ -54,9 +54,12 @@ deploy:
 	kubectl apply -f <(${ISTIO_OUT}/istioctl kube-inject -f yaml/svc.yaml --hub=${ISTIO_HUB} --tag=${ISTIO_TAG}) && \
 	kubectl apply -f yaml/pinger.yaml && \
 	kubectl apply -f yaml/metric.yaml && \
-	kubectl apply -f yaml/trace.yaml
+	kubectl apply -f yaml/trace.yaml && \
+	kubectl apply -f yaml/log.yaml
 
 clean:
 	kubectl delete -f yaml/svc.yaml && \
 	kubectl delete -f yaml/pinger.yaml && \
-	kubectl delete -f yaml/metric.yaml
+	kubectl delete -f yaml/metric.yaml && \
+	kubectl delete -f yaml/trace.yaml && \
+	kubectl delete -f yaml/log.yaml

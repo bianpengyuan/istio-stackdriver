@@ -1,3 +1,15 @@
+---
+apiVersion: config.istio.io/v1alpha2
+kind: EgressRule
+metadata:
+  name: google-egress-rule
+spec:
+  destination:
+    service: www.google.com
+  ports:
+    - port: 443
+      protocol: https
+---
 ##################################################################################################
 # Svc A
 ##################################################################################################
@@ -27,13 +39,13 @@ spec:
     spec:
       containers:
       - name: svc-a
-        image: gcr.io/csm-metrics-test/svc-a:test-30
+        image: gcr.io/csm-metrics-test/svc-a:test-33
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
         args:
         - --port
-        - 80
+        - "80"
 ---
 ##################################################################################################
 # Svc B
@@ -64,7 +76,7 @@ spec:
     spec:
       containers:
       - name: svc-b
-        image: gcr.io/csm-metrics-test/svc-b:test-30
+        image: gcr.io/csm-metrics-test/svc-b:test-33
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 50051
@@ -98,7 +110,7 @@ spec:
     spec:
       containers:
       - name: svc-c
-        image: gcr.io/csm-metrics-test/svc-c:test-30
+        image: gcr.io/csm-metrics-test/svc-c:test-33
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 23333
