@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
       - name: svc-a
-        image: gcr.io/csm-metrics-test/svc-a:latest
+        image: gcr.io/istio-stackdriver/svc-a:head
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -76,7 +76,7 @@ spec:
     spec:
       containers:
       - name: svc-b
-        image: gcr.io/csm-metrics-test/svc-b:latest
+        image: gcr.io/istio-stackdriver/svc-b:head
         imagePullPolicy: Always
         ports:
         - containerPort: 50051
@@ -110,7 +110,7 @@ spec:
     spec:
       containers:
       - name: svc-c
-        image: gcr.io/csm-metrics-test/svc-c:latest
+        image: gcr.io/istio-stackdriver/svc-c:head
         imagePullPolicy: Always
         ports:
         - containerPort: 23333
