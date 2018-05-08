@@ -740,7 +740,7 @@ data:
       # and manipulation.
       # The "TPROXY" mode also configures the sidecar to run with the
       # CAP_NET_ADMIN capability, which is required to use TPROXY.
-      interceptionMode: REDIRECT
+      #interceptionMode: REDIRECT
       #
       # Port where Envoy listens (on local host) for admin commands
       # You can exec into the istio-proxy container in a pod and
@@ -1777,7 +1777,7 @@ metadata:
     heritage: Tiller
     istio: ingressgateway
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     istio: ingressgateway
   ports:
@@ -2154,8 +2154,8 @@ spec:
           - --discoveryAddress
           - istio-pilot:8080
           resources:
-            {}
-            
+            requests:
+              cpu: 400m
           env:
           - name: POD_NAME
             valueFrom:
