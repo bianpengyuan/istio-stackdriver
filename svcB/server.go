@@ -124,18 +124,36 @@ type server struct{}
 
 func (s *server) visitGoogle(md metadata.MD) (string, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://www.google.com:443", nil)
+	req, err := http.NewRequest("GET", "https://www.google.com:443", nil)
 	eh := extractHeaders(md)
 	for k, v := range eh {
 		req.Header.Add(k, v)
 	}
 
 	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("visit google error: %s", err)
+		return "", err
+	}
 	defer resp.Body.Close()
+	log.Printf("Visit google.com: %v", resp.StatusCode)
+	return fmt.Sprintf("Get response status code %v from google", resp.StatusCode), nil
+}
+
+func (s *server) visitHttpbin(md metadata.MD) (string, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://www.httpbin.com:80", nil)
+	eh := extractHeaders(md)
+	for k, v := range eh {
+		req.Header.Add(k, v)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Get response status code %v from google", resp.StatusCode), nil
+	defer resp.Body.Close()
+	return fmt.Sprintf("Get response status code %v from httpbin", resp.StatusCode), nil
 }
 
 func (s *server) visitSvcC() (string, error) {
@@ -167,11 +185,16 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 		if !ok {
 			return nil, fmt.Errorf("failed to get grpc context")
 		}
-		if gm, err := s.visitGoogle(md); err != nil {
-			return nil, fmt.Errorf("failed to visit google.com")
+		if gm, err := s.visitHttpbin(md); err != nil {
+			return nil, fmt.Errorf("failed to visit httpbin.com")
 		} else {
 			m += gm + "\n"
 		}
+		//	if gm, err := s.visitGoogle(md); err != nil {
+		//		return nil, fmt.Errorf("failed to visit google.com")
+		//	} else {
+		//		m += gm + "\n"
+		//	}
 	}
 	// execWorkflow(md)
 	return &pb.HelloReply{Message: m}, nil

@@ -26,7 +26,7 @@ func getIngressIP() string {
 	throttle := time.Tick(rate)
 	for {
 		<-throttle
-		selectors := labels.Set{"istio": "ingress"}.AsSelectorPreValidated()
+		selectors := labels.Set{"istio": "ingressgateway"}.AsSelectorPreValidated()
 		listOptions := metav1.ListOptions{
 			LabelSelector: selectors.String(),
 		}
@@ -56,7 +56,9 @@ func main() {
 		<-throttle
 		go func() {
 			resp, err := http.Get("http://" + ip + "/")
-			defer resp.Body.Close()
+			if resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
 			if err != nil {
 				log.Printf("Error http request %v", err)
 			}

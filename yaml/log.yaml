@@ -7,36 +7,34 @@ spec:
   severity: '"Info"'
   timestamp: request.time
   variables:
-    originIp: origin.ip | ip("0.0.0.0")
-    sourceIp: source.ip | ip("0.0.0.0")
-    sourceService: source.service | ""
-    sourceUser: source.user | source.uid | ""
-    sourceNamespace: source.namespace | ""
-    destinationIp: destination.ip | ip("0.0.0.0")
-    destinationService: destination.service | ""
-    destinationNamespace: destination.namespace | ""
-    apiName: api.service | ""
-    apiVersion: api.version | ""
-    apiClaims: request.headers["sec-istio-auth-userinfo"]| ""
-    apiKey: request.api_key | request.headers["x-api-key"] | ""
-    requestOperation: api.operation | ""
-    protocol: request.scheme | "http"
-    method: request.method | ""
-    url: request.path | ""
-    responseCode: response.code | 0
-    responseSize: response.size | 0
-    requestSize: request.size | 0
-    latency: response.duration | "0ms"
-    connectionMtls: connection.mtls | false
-    useragent: request.useragent | ""
-    responseTimestamp: response.time
-    tcpBytesReceived: connection.received.bytes | 0
-    tcpBytesSent: connection.sent.bytes | 0
-  monitored_resource_type: '"global"'
+    source_ip: source.ip | ip("0.0.0.0")
+    destination_service_name: destination.service.name | "unknown"
+    destination_port: destination.port | 0
+    request_operation: request.method | "unknown"
+    request_protocol: context.protocol | "unknown"
+    api_version: api.version | "unknown"
+    api_name: api.service | "unknown"
+    response_code: response.code | 0
+    service_authentication_policy: '"NONE"'
+    source_workload_namespace: source.namespace | "unknown"
+    source_workload_name: source.workload.name | "unknown"
+    source_owner: source.owner | "unknown"
+    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_name: destination.workload.name | "unknown"
+    destination_owner: destination.owner | "unknown"
+    response_size: response.size | 0
+    request_size: request.size | 0
+    request_latency: response.duration | "0ms"
+    connection_received_bytes: connection.received.bytes | 0
+    connection_sent_bytes: connection.sent.bytes | 0
+  monitored_resource_type: '"k8s_container"'
   monitoredResourceDimensions:
-  # When using the global MR, this must be filled in, preferably matching the
-  # project_id given above in stackdriver config.
-    project_id: '"csm-metrics-test"'
+    project_id: '""'
+    cluster_name: '""'
+    namespace_name: destination.namespace | "unknown"
+    location: '""'
+    container_name: '"unknown"'
+    pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
 kind: stackdriver
@@ -44,45 +42,31 @@ metadata:
   name: log-handler
   namespace: istio-system
 spec:
-  # pushInterval: 1m
-  project_id: "csm-metrics-test"
-
+  pushInterval: 10s
   # Describes how to map Istio logs into Stackdriver.
   logInfo:
     accesslog-stackdriver.logentry.istio-system:
-      httpMapping:
-        status: responseCode
-        requestSize: requestSize
-        responseSize: responseSize
-        latency: latency
-        localIp: sourceIp
-        remoteIp: destinationIp
       labelNames:
-      - originIp
-      - sourceIp
-      - sourceService
-      - sourceUser
-      - sourceNamespace
-      - destinationIp
-      - destinationService
-      - destinationNamespace
-      - apiName
-      - apiVersion
-      - apiClaims
-      - apiKey
-      - requestOperation
-      - protocol
-      - method
-      - url
-      - responseCode
-      - responseSize
-      - requestSize
-      - latency
-      - connectionMtls
-      - useragent
-      - responseTimestamp
-      - tcpBytesReceived
-      - tcpBytesSent
+      - source_ip
+      - destination_service_name
+      - destination_port
+      - request_operation
+      - request_protocol
+      - api_version
+      - api_name
+      - response_code
+      - service_authentication_policy
+      - source_workload_namespace
+      - source_workload_name
+      - source_owner
+      - destination_workload_namespace
+      - destination_workload_name
+      - destination_owner
+      - response_size
+      - request_size
+      - request_latency
+      - connection_received_bytes
+      - connection_sent_bytes
 ---
 apiVersion: "config.istio.io/v1alpha2"
 kind: rule

@@ -51,6 +51,6 @@ spec:
       serviceAccountName: pinger-service-account
       containers:
       - name: pinger
-        image: gcr.io/bpy-istio/pinger:head
+        image: gcr.io/istio-stackdriver/pinger:head
         imagePullPolicy: Always
 ---

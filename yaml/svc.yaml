@@ -1,15 +1,3 @@
----
-apiVersion: config.istio.io/v1alpha2
-kind: EgressRule
-metadata:
-  name: google-egress-rule
-spec:
-  destination:
-    service: www.google.com
-  ports:
-    - port: 443
-      protocol: https
----
 ##################################################################################################
 # Svc A
 ##################################################################################################
@@ -133,3 +121,36 @@ spec:
           serviceName: svc-a
           servicePort: 80
 ---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: demo-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: demo
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - demo-gateway
+  http:
+  - match:
+    - uri:
+        exact: /
+    route:
+    - destination:
+        host: svc-a
+        port:
+          number: 80
