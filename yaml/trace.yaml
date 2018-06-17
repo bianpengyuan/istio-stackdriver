@@ -4,8 +4,6 @@ metadata:
   name: stackdriver-tracing-handler
   namespace: istio-system
 spec:
-  project_id: csm-metrics-test
-  # Describes how to map Istio logs into Stackdriver.
   trace:
     sample_probability: 0.5
 ---
@@ -23,6 +21,7 @@ spec:
   endTime: response.time
   spanTags:
     destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -33,7 +32,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
     http_url: request.path | ""
@@ -55,6 +54,7 @@ spec:
   endTime: response.time
   spanTags:
     destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -65,7 +65,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
     http_url: request.path | ""
@@ -79,7 +79,7 @@ metadata:
   name: stackdriver-workload-tracing-rule
   namespace: istio-system
 spec:
-  match: context.protocol == "http" && destination.uid == context.reporter.uid && (destination.service.name | "unknown") == "unknown" # If omitted match is true.
+  match: (context.protocol == "http" || context.protocol == "grpc") && context.reporter.local  # If omitted match is true.
   actions:
   - handler: stackdriver-tracing-handler.stackdriver
     instances:
@@ -91,8 +91,9 @@ metadata:
   name: stackdriver-serivce-tracing-rule
   namespace: istio-system
 spec:
-  match: context.protocol == "http" && destination.uid == context.reporter.uid && (destination.service.name | "unknown") != "unknown" # If omitted match is true.
+  match: context.protocol == "http" && context.reporter.local  # If omitted match is true.
   actions:
   - handler: stackdriver-tracing-handler.stackdriver
     instances:
     - stackdriver-service-span.tracespan
+---

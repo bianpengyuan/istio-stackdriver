@@ -1,7 +1,7 @@
 apiVersion: "config.istio.io/v1alpha2"
 kind: logentry
 metadata:
-  name: accesslog-stackdriver
+  name: server-accesslog-stackdriver
   namespace: istio-system
 spec:
   severity: '"Info"'
@@ -16,10 +16,10 @@ spec:
     api_name: api.service | "unknown"
     response_code: response.code | 0
     service_authentication_policy: '"NONE"'
-    source_workload_namespace: source.namespace | "unknown"
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
     response_size: response.size | 0
@@ -33,7 +33,7 @@ spec:
     cluster_name: '""'
     namespace_name: destination.namespace | "unknown"
     location: '""'
-    container_name: '"unknown"'
+    container_name: destination.container.name | "unknown"
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -45,7 +45,7 @@ spec:
   pushInterval: 10s
   # Describes how to map Istio logs into Stackdriver.
   logInfo:
-    accesslog-stackdriver.logentry.istio-system:
+    server-accesslog-stackdriver.logentry.istio-system:
       labelNames:
       - source_ip
       - destination_service_name
@@ -74,8 +74,8 @@ metadata:
   name: stackdriver-log
   namespace: istio-system
 spec:
+  match: context.reporter.local
   actions:
   - handler: log-handler.stackdriver
     instances:
-    - accesslog-stackdriver.logentry
----
+    - server-accesslog-stackdriver.logentry

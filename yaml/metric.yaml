@@ -56,7 +56,7 @@ metadata:
   name: stackdriver-server
   namespace: istio-system
 spec:
-  match: context.protocol == "http" # If omitted match is true.
+  match: (context.protocol == "http" || context.protocol == "grpc") && context.reporter.local # If omitted match is true.
   actions:
   - handler: handler.stackdriver
     instances:
@@ -71,7 +71,7 @@ metadata:
   name: stackdriver-tcp-server
   namespace: istio-system
 spec:
-  match: context.protocol == "tcp" # If omitted match is true.
+  match: context.protocol == "tcp" && context.reporter.local # If omitted match is true.
   actions:
   - handler: handler.stackdriver
     instances:
@@ -89,7 +89,7 @@ spec:
   value: "1"
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.service.namespace | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -100,7 +100,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
@@ -109,9 +109,9 @@ spec:
     # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
-    namespace_name: destination.namespace | "unknown"
+    namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: '"unknown"'
+    container_name: destination.container.name | "unknown"
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -123,7 +123,7 @@ spec:
   value: request.size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.service.namespace | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -134,7 +134,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
@@ -143,9 +143,9 @@ spec:
     # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
-    namespace_name: destination.namespace | "unknown"
+    namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: '"unknown"'
+    container_name: destination.container.name | "unknown"
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -157,7 +157,7 @@ spec:
   value: response.size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.service.namespace | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -168,7 +168,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
@@ -177,9 +177,9 @@ spec:
     # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
-    namespace_name: destination.namespace | "unknown"
+    namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: '"unknown"'
+    container_name: destination.container.name | "unknown"
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -191,7 +191,7 @@ spec:
   value: response.duration
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.service.namespace | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -202,7 +202,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
@@ -211,9 +211,9 @@ spec:
     # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
-    namespace_name: destination.namespace | "unknown"
+    namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: '"unknown"'
+    container_name: destination.container.name | "unknown"
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -225,7 +225,7 @@ spec:
   value: connection.received.bytes | 0
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.service.namespace | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -236,7 +236,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
@@ -245,9 +245,9 @@ spec:
     # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
-    namespace_name: destination.namespace | "unknown"
+    namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: '"unknown"'
+    container_name: destination.container.name | "unknown"
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -259,7 +259,7 @@ spec:
   value: connection.sent.bytes | 0
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.service.namespace | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
@@ -270,7 +270,7 @@ spec:
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.namespace | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
     destination_workload_name: destination.workload.name | "unknown"
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
@@ -279,7 +279,7 @@ spec:
     # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
-    namespace_name: destination.namespace | "unknown"
+    namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: '"unknown"'
+    container_name: destination.container.name | "unknown"
     pod_name: destination.name | "unknown"
