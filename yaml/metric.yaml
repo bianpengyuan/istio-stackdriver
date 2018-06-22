@@ -49,6 +49,45 @@ spec:
       kind: 3 # CUMULATIVE
       value: 2 # INT64
       metric_type: "istio.io/service/server/sent_bytes_count"
+    client-request-count.metric.istio-system:
+      kind: 3 # CUMULATIVE
+      value: 2 # INT64
+      metric_type: "istio.io/service/client/request_count"
+    client-request-bytes.metric.istio-system:
+      kind: 3 # CUMULATIVE
+      value: 5 # DISTRIBUTION
+      buckets:
+        exponentialBuckets:
+          numFiniteBuckets: 20
+          scale: 1
+          growthFactor: 2
+      metric_type: "istio.io/service/client/request_bytes"
+    client-response-bytes.metric.istio-system:
+      kind: 3 # CUMULATIVE
+      value: 5 # DISTRIBUTION
+      buckets:
+        exponentialBuckets:
+          numFiniteBuckets: 20
+          scale: 1
+          growthFactor: 2
+      metric_type: "istio.io/service/client/response_bytes"
+    client-roundtrip-latencies.metric.istio-system:
+      kind: 3 # CUMULATIVE
+      value: 5 # DISTRIBUTION
+      buckets:
+        exponentialBuckets:
+          numFiniteBuckets: 20
+          scale: 1
+          growthFactor: 2
+      metric_type: "istio.io/service/client/roundtrip_latencies"
+    client-received-bytes-count.metric.istio-system:
+      kind: 3 # CUMULATIVE
+      value: 2 # INT64
+      metric_type: "istio.io/service/client/received_bytes_count"
+    client-sent-bytes-count.metric.istio-system:
+      kind: 3 # CUMULATIVE
+      value: 2 # INT64
+      metric_type: "istio.io/service/client/sent_bytes_count"
 ---
 apiVersion: "config.istio.io/v1alpha2"
 kind: rule
@@ -68,6 +107,21 @@ spec:
 apiVersion: "config.istio.io/v1alpha2"
 kind: rule
 metadata:
+  name: stackdriver-client
+  namespace: istio-system
+spec:
+  match: (context.protocol == "http" || context.protocol == "grpc") && (context.reporter.local == false) # If omitted match is true.
+  actions:
+  - handler: handler.stackdriver
+    instances:
+    - client-request-count.metric
+    - client-request-bytes.metric
+    - client-response-bytes.metric
+    - client-roundtrip-latencies.metric
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: rule
+metadata:
   name: stackdriver-tcp-server
   namespace: istio-system
 spec:
@@ -78,8 +132,19 @@ spec:
     - server-received-bytes-count.metric
     - server-sent-bytes-count.metric
 ---
-# Note, we're trying to keep the following metric definitions in line with metrics.yaml - we add extra here to handle
-# populating monitored resource values.
+apiVersion: "config.istio.io/v1alpha2"
+kind: rule
+metadata:
+  name: stackdriver-tcp-client
+  namespace: istio-system
+spec:
+  match: context.protocol == "tcp" && (context.reporter.local == false) # If omitted match is true.
+  actions:
+  - handler: handler.stackdriver
+    instances:
+    - client-received-bytes-count.metric
+    - client-sent-bytes-count.metric
+---
 apiVersion: "config.istio.io/v1alpha2"
 kind: metric
 metadata:
@@ -117,10 +182,43 @@ spec:
 apiVersion: "config.istio.io/v1alpha2"
 kind: metric
 metadata:
+  name: client-request-count
+  namespace: istio-system
+spec:
+  value: "1"
+  dimensions:
+    destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
+    destination_port: destination.port | 0
+    request_operation: request.method | "unknown"
+    request_protocol: context.protocol | "unknown"
+    api_version: api.version | "unknown"
+    api_name: api.service | "unknown"
+    response_code: response.code | 0
+    service_authentication_policy: '"NONE"'
+    source_workload_namespace: source.namespace | "unknown"
+    source_workload_name: source.workload.name | "unknown"
+    source_owner: source.owner | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
+    destination_workload_name: destination.workload.name | "unknown"
+    destination_owner: destination.owner | "unknown"
+  monitoredResourceType: '"k8s_pod"'
+  monitoredResourceDimensions:
+    # When using the global MR, this must be filled in, preferably matching the
+    # project_id given above in stackdriver config.
+    project_id: '""'
+    cluster_name: '""'
+    namespace_name: destination.workload.namespace | "unknown"
+    location: '""'
+    pod_name: destination.name | "unknown"
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: metric
+metadata:
   name: server-request-bytes
   namespace: istio-system
 spec:
-  value: request.size
+  value: request.total_size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
     destination_service_namespace: destination.namespace | "unknown"
@@ -151,10 +249,43 @@ spec:
 apiVersion: "config.istio.io/v1alpha2"
 kind: metric
 metadata:
+  name: client-request-bytes
+  namespace: istio-system
+spec:
+  value: request.total_size
+  dimensions:
+    destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
+    destination_port: destination.port | 0
+    request_operation: request.method | "unknown"
+    request_protocol: context.protocol | "unknown"
+    api_version: api.version | "unknown"
+    api_name: api.service | "unknown"
+    response_code: response.code | 0
+    service_authentication_policy: '"NONE"'
+    source_workload_namespace: source.namespace | "unknown"
+    source_workload_name: source.workload.name | "unknown"
+    source_owner: source.owner | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
+    destination_workload_name: destination.workload.name | "unknown"
+    destination_owner: destination.owner | "unknown"
+  monitoredResourceType: '"k8s_pod"'
+  monitoredResourceDimensions:
+    # When using the global MR, this must be filled in, preferably matching the
+    # project_id given above in stackdriver config.
+    project_id: '""'
+    cluster_name: '""'
+    namespace_name: destination.workload.namespace | "unknown"
+    location: '""'
+    pod_name: destination.name | "unknown"
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: metric
+metadata:
   name: server-response-bytes
   namespace: istio-system
 spec:
-  value: response.size
+  value: response.total_size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
     destination_service_namespace: destination.namespace | "unknown"
@@ -180,6 +311,39 @@ spec:
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
     container_name: destination.container.name | "unknown"
+    pod_name: destination.name | "unknown"
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: metric
+metadata:
+  name: client-response-bytes
+  namespace: istio-system
+spec:
+  value: response.total_size
+  dimensions:
+    destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
+    destination_port: destination.port | 0
+    request_operation: request.method | "unknown"
+    request_protocol: context.protocol | "unknown"
+    api_version: api.version | "unknown"
+    api_name: api.service | "unknown"
+    response_code: response.code | 0
+    service_authentication_policy: '"NONE"'
+    source_workload_namespace: source.namespace | "unknown"
+    source_workload_name: source.workload.name | "unknown"
+    source_owner: source.owner | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
+    destination_workload_name: destination.workload.name | "unknown"
+    destination_owner: destination.owner | "unknown"
+  monitoredResourceType: '"k8s_pod"'
+  monitoredResourceDimensions:
+    # When using the global MR, this must be filled in, preferably matching the
+    # project_id given above in stackdriver config.
+    project_id: '""'
+    cluster_name: '""'
+    namespace_name: destination.workload.namespace | "unknown"
+    location: '""'
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -219,10 +383,10 @@ spec:
 apiVersion: "config.istio.io/v1alpha2"
 kind: metric
 metadata:
-  name: server-received-bytes-count
+  name: client-roundtrip-latencies
   namespace: istio-system
 spec:
-  value: connection.received.bytes | 0
+  value: response.duration
   dimensions:
     destination_service_name: destination.service.name | "unknown"
     destination_service_namespace: destination.namespace | "unknown"
@@ -232,6 +396,35 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
+    service_authentication_policy: '"NONE"'
+    source_workload_namespace: source.namespace | "unknown"
+    source_workload_name: source.workload.name | "unknown"
+    source_owner: source.owner | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
+    destination_workload_name: destination.workload.name | "unknown"
+    destination_owner: destination.owner | "unknown"
+  monitoredResourceType: '"k8s_pod"'
+  monitoredResourceDimensions:
+    # When using the global MR, this must be filled in, preferably matching the
+    # project_id given above in stackdriver config.
+    project_id: '""'
+    cluster_name: '""'
+    namespace_name: destination.workload.namespace | "unknown"
+    location: '""'
+    pod_name: destination.name | "unknown"
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: metric
+metadata:
+  name: server-received-bytes-count
+  namespace: istio-system
+spec:
+  value: connection.received.bytes | 0
+  dimensions:
+    destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
+    destination_port: destination.port | 0
+    request_protocol: context.protocol | "unknown"
     service_authentication_policy: '"NONE"'
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
@@ -253,6 +446,35 @@ spec:
 apiVersion: "config.istio.io/v1alpha2"
 kind: metric
 metadata:
+  name: client-received-bytes-count
+  namespace: istio-system
+spec:
+  value: connection.received.bytes | 0
+  dimensions:
+    destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
+    destination_port: destination.port | 0
+    request_protocol: context.protocol | "unknown"
+    service_authentication_policy: '"NONE"'
+    source_workload_namespace: source.namespace | "unknown"
+    source_workload_name: source.workload.name | "unknown"
+    source_owner: source.owner | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
+    destination_workload_name: destination.workload.name | "unknown"
+    destination_owner: destination.owner | "unknown"
+  monitoredResourceType: '"k8s_pod"'
+  monitoredResourceDimensions:
+    # When using the global MR, this must be filled in, preferably matching the
+    # project_id given above in stackdriver config.
+    project_id: '""'
+    cluster_name: '""'
+    namespace_name: destination.workload.namespace | "unknown"
+    location: '""'
+    pod_name: destination.name | "unknown"
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: metric
+metadata:
   name: server-sent-bytes-count
   namespace: istio-system
 spec:
@@ -261,11 +483,7 @@ spec:
     destination_service_name: destination.service.name | "unknown"
     destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
     request_protocol: context.protocol | "unknown"
-    api_version: api.version | "unknown"
-    api_name: api.service | "unknown"
-    response_code: response.code | 0
     service_authentication_policy: '"NONE"'
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
@@ -282,4 +500,33 @@ spec:
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
     container_name: destination.container.name | "unknown"
+    pod_name: destination.name | "unknown"
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: metric
+metadata:
+  name: client-sent-bytes-count
+  namespace: istio-system
+spec:
+  value: connection.sent.bytes | 0
+  dimensions:
+    destination_service_name: destination.service.name | "unknown"
+    destination_service_namespace: destination.namespace | "unknown"
+    destination_port: destination.port | 0
+    request_protocol: context.protocol | "unknown"
+    service_authentication_policy: '"NONE"'
+    source_workload_namespace: source.namespace | "unknown"
+    source_workload_name: source.workload.name | "unknown"
+    source_owner: source.owner | "unknown"
+    destination_workload_namespace: destination.workload.namespace | "unknown"
+    destination_workload_name: destination.workload.name | "unknown"
+    destination_owner: destination.owner | "unknown"
+  monitoredResourceType: '"k8s_pod"'
+  monitoredResourceDimensions:
+    # When using the global MR, this must be filled in, preferably matching the
+    # project_id given above in stackdriver config.
+    project_id: '""'
+    cluster_name: '""'
+    namespace_name: destination.workload.namespace | "unknown"
+    location: '""'
     pod_name: destination.name | "unknown"

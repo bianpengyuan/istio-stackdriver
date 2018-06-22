@@ -142,7 +142,7 @@ func (s *server) visitGoogle(md metadata.MD) (string, error) {
 
 func (s *server) visitHttpbin(md metadata.MD) (string, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://www.httpbin.com:80", nil)
+	req, err := http.NewRequest("GET", "http://httpbin.org:80", nil)
 	eh := extractHeaders(md)
 	for k, v := range eh {
 		req.Header.Add(k, v)
