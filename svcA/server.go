@@ -10,12 +10,12 @@ import (
 	"log"
 	"math/rand"
 	http "net/http"
-	"time"
+	// "time"
 
 	openzipkin "github.com/openzipkin/zipkin-go"
 	zrh "github.com/openzipkin/zipkin-go/reporter/http"
 	"go.opencensus.io/exporter/zipkin"
-	b3 "go.opencensus.io/plugin/ochttp/propagation/b3"
+	// b3 "go.opencensus.io/plugin/ochttp/propagation/b3"
 	"go.opencensus.io/trace"
 )
 
@@ -44,24 +44,24 @@ func extractHeaders(r *http.Request) map[string]string {
 	return ret
 }
 
-func execWorkflow(req *http.Request) {
-	f := &b3.HTTPFormat{}
-	p, ok := f.SpanContextFromRequest(req)
-	if !ok {
-		fmt.Println("Cannot parse http request with b3 format")
-		return
-	}
-
-	ctx, span := trace.StartSpanWithRemoteParent(context.Background(), "svc-a-foo", p)
-	_, span1 := trace.StartSpan(ctx, "svc-a-bar")
-	time.Sleep(50 * time.Millisecond)
-	span1.End()
-	_, span2 := trace.StartSpan(ctx, "svc-a-baz")
-	time.Sleep(50 * time.Millisecond)
-	span2.End()
-	span.End()
-
-}
+// func execWorkflow(req *http.Request) {
+// 	f := &b3.HTTPFormat{}
+// 	p, ok := f.SpanContextFromRequest(req)
+// 	if !ok {
+// 		fmt.Println("Cannot parse http request with b3 format")
+// 		return
+// 	}
+//
+// 	ctx, span := trace.StartSpanWithRemoteParent(context.Background(), "svc-a-foo", p)
+// 	_, span1 := trace.StartSpan(ctx, "svc-a-bar")
+// 	time.Sleep(50 * time.Millisecond)
+// 	span1.End()
+// 	_, span2 := trace.StartSpan(ctx, "svc-a-baz")
+// 	time.Sleep(50 * time.Millisecond)
+// 	span2.End()
+// 	span.End()
+//
+// }
 
 func svcBGreeting(req *http.Request) (string, error) {
 	conn, err := grpc.Dial("svc-b:50051", grpc.WithInsecure())
@@ -86,7 +86,7 @@ func svcBGreeting(req *http.Request) (string, error) {
 		return "", fmt.Errorf("could not greet: %v", err)
 	}
 
-	execWorkflow(req)
+	// execWorkflow(req)
 	return r.Message, nil
 }
 

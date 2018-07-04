@@ -5,20 +5,22 @@ metadata:
   namespace: istio-system
 spec:
   trace:
-    sample_probability: 0.5
+    sample_probability: 0.1
 ---
 apiVersion: "config.istio.io/v1alpha2"
 kind: tracespan
 metadata:
-  name: stackdriver-workload-span
+  name: stackdriver-span
   namespace: istio-system
 spec:
   traceId: request.headers["x-b3-traceid"]
   spanId: request.headers["x-b3-spanid"] | ""
   parentSpanId: request.headers["x-b3-parentspanid"] | ""
-  spanName: destination.workload.name | "/"
+  spanName: destination.service.host | destination.service.name | destination.workload.name | "unknown"
   startTime: request.time
   endTime: response.time
+  clientSpan: (context.reporter.kind | "inbound") == "outbound"
+  rewriteClientSpanId: "true"
   spanTags:
     destination_service_name: destination.service.name | "unknown"
     destination_service_namespace: destination.namespace | "unknown"
@@ -28,40 +30,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
-    source_workload_namespace: source.namespace | "unknown"
-    source_workload_name: source.workload.name | "unknown"
-    source_owner: source.owner | "unknown"
-    destination_workload_namespace: destination.workload.namespace | "unknown"
-    destination_workload_name: destination.workload.name | "unknown"
-    destination_owner: destination.owner | "unknown"
-    http_url: request.path | ""
-    request_size: request.size | 0
-    response_size: response.size | 0
-    source_ip: source.ip | ip("0.0.0.0")
----
-apiVersion: "config.istio.io/v1alpha2"
-kind: tracespan
-metadata:
-  name: stackdriver-service-span
-  namespace: istio-system
-spec:
-  traceId: request.headers["x-b3-traceid"]
-  spanId: request.headers["x-b3-spanid"] | ""
-  parentSpanId: request.headers["x-b3-parentspanid"] | ""
-  spanName: destination.service.name | "/"
-  startTime: request.time
-  endTime: response.time
-  spanTags:
-    destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
-    destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
-    request_protocol: context.protocol | "unknown"
-    api_version: api.version | "unknown"
-    api_name: api.service | "unknown"
-    response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -76,24 +45,11 @@ spec:
 apiVersion: "config.istio.io/v1alpha2"
 kind: rule
 metadata:
-  name: stackdriver-workload-tracing-rule
+  name: stackdriver-tracing-rule
   namespace: istio-system
 spec:
-  match: (context.protocol == "http" || context.protocol == "grpc") && context.reporter.local  # If omitted match is true.
+  match: context.protocol == "http" || context.protocol == "grpc"  # If omitted match is true.
   actions:
   - handler: stackdriver-tracing-handler.stackdriver
     instances:
-    - stackdriver-workload-span.tracespan
----
-apiVersion: "config.istio.io/v1alpha2"
-kind: rule
-metadata:
-  name: stackdriver-serivce-tracing-rule
-  namespace: istio-system
-spec:
-  match: context.protocol == "http" && context.reporter.local  # If omitted match is true.
-  actions:
-  - handler: stackdriver-tracing-handler.stackdriver
-    instances:
-    - stackdriver-service-span.tracespan
----
+    - stackdriver-span.tracespan

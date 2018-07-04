@@ -7,10 +7,6 @@ spec:
   push_interval: 10s
   metricInfo:
     server-request-count.metric.istio-system:
-      # Due to a bug in gogoproto deserialization, Enums in maps must be
-      # specified by their integer value, not variant name. See
-      # https://github.com/googleapis/googleapis/blob/master/google/api/metric.proto
-      # MetricKind and ValueType for the values to provide.
       kind: 3 # CUMULATIVE
       value: 2 # INT64
       metric_type: "istio.io/service/server/request_count"
@@ -95,7 +91,7 @@ metadata:
   name: stackdriver-server
   namespace: istio-system
 spec:
-  match: (context.protocol == "http" || context.protocol == "grpc") && context.reporter.local # If omitted match is true.
+  match: (context.protocol == "http" || context.protocol == "grpc") && (context.reporter.kind | "inbound" == "inbound")
   actions:
   - handler: handler.stackdriver
     instances:
@@ -110,7 +106,7 @@ metadata:
   name: stackdriver-client
   namespace: istio-system
 spec:
-  match: (context.protocol == "http" || context.protocol == "grpc") && (context.reporter.local == false) # If omitted match is true.
+  match: (context.protocol == "http" || context.protocol == "grpc") && (context.reporter.kind | "inbound" == "outbound")
   actions:
   - handler: handler.stackdriver
     instances:
@@ -125,7 +121,7 @@ metadata:
   name: stackdriver-tcp-server
   namespace: istio-system
 spec:
-  match: context.protocol == "tcp" && context.reporter.local # If omitted match is true.
+  match: context.protocol == "tcp" && (context.reporter.kind | "inbound" == "inbound")
   actions:
   - handler: handler.stackdriver
     instances:
@@ -138,7 +134,7 @@ metadata:
   name: stackdriver-tcp-client
   namespace: istio-system
 spec:
-  match: context.protocol == "tcp" && (context.reporter.local == false) # If omitted match is true.
+  match: context.protocol == "tcp" && (context.reporter.kind | "inbound" == "outbound")
   actions:
   - handler: handler.stackdriver
     instances:
@@ -161,7 +157,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -170,8 +166,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -195,7 +189,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -204,8 +198,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_pod"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -228,7 +220,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -237,8 +229,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -262,7 +252,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -295,7 +285,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -304,8 +294,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -329,7 +317,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -338,8 +326,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_pod"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -362,7 +348,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -371,8 +357,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -396,7 +380,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -405,8 +389,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_pod"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -425,7 +407,7 @@ spec:
     destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -434,8 +416,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -455,7 +435,7 @@ spec:
     destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -464,8 +444,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_pod"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -484,7 +462,7 @@ spec:
     destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -493,8 +471,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_container"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -514,7 +490,7 @@ spec:
     destination_service_namespace: destination.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -523,8 +499,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_pod"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"

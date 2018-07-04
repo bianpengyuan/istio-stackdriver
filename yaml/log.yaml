@@ -15,7 +15,7 @@ spec:
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: '"NONE"'
+    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
     source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
@@ -74,7 +74,7 @@ metadata:
   name: stackdriver-log
   namespace: istio-system
 spec:
-  match: context.reporter.local
+  match: (context.protocol == "http" || context.protocol == "grpc") && (context.reporter.kind | "inbound" == "inbound")
   actions:
   - handler: log-handler.stackdriver
     instances:
