@@ -10,13 +10,6 @@ import (
 	"log"
 	"math/rand"
 	http "net/http"
-	// "time"
-
-	openzipkin "github.com/openzipkin/zipkin-go"
-	zrh "github.com/openzipkin/zipkin-go/reporter/http"
-	"go.opencensus.io/exporter/zipkin"
-	// b3 "go.opencensus.io/plugin/ochttp/propagation/b3"
-	"go.opencensus.io/trace"
 )
 
 var (
@@ -43,25 +36,6 @@ func extractHeaders(r *http.Request) map[string]string {
 	}
 	return ret
 }
-
-// func execWorkflow(req *http.Request) {
-// 	f := &b3.HTTPFormat{}
-// 	p, ok := f.SpanContextFromRequest(req)
-// 	if !ok {
-// 		fmt.Println("Cannot parse http request with b3 format")
-// 		return
-// 	}
-//
-// 	ctx, span := trace.StartSpanWithRemoteParent(context.Background(), "svc-a-foo", p)
-// 	_, span1 := trace.StartSpan(ctx, "svc-a-bar")
-// 	time.Sleep(50 * time.Millisecond)
-// 	span1.End()
-// 	_, span2 := trace.StartSpan(ctx, "svc-a-baz")
-// 	time.Sleep(50 * time.Millisecond)
-// 	span2.End()
-// 	span.End()
-//
-// }
 
 func svcBGreeting(req *http.Request) (string, error) {
 	conn, err := grpc.Dial("svc-b:50051", grpc.WithInsecure())
@@ -92,10 +66,10 @@ func svcBGreeting(req *http.Request) (string, error) {
 
 func EchoHandler(writer http.ResponseWriter, request *http.Request) {
 	r := rand.Intn(10)
-	if r < 3 {
+	if r < 2 {
 		http.Error(writer, "error", http.StatusForbidden)
 		return
-	} else if r >= 3 && r < 7 {
+	} else if r >= 2 && r < 4 {
 		http.Error(writer, "error", http.StatusNotFound)
 		return
 	}
@@ -110,24 +84,6 @@ func EchoHandler(writer http.ResponseWriter, request *http.Request) {
 func main() {
 	flag.Parse()
 	http.HandleFunc("/", EchoHandler)
-
-	// Initialize open census zipkin exporter
-	endpoint, err := openzipkin.NewEndpoint("svc-a-workload", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	// The Zipkin reporter takes collected spans from the app and reports them to the backend
-	// http://localhost:9411/api/v2/spans is the default for the Zipkin Span v2
-	reporter := zrh.NewReporter("http://zipkin.istio-system:9411/api/v2/spans")
-	defer reporter.Close()
-
-	// The OpenCensus exporter wraps the Zipkin reporter
-	exporter := zipkin.NewExporter(reporter, endpoint)
-	trace.RegisterExporter(exporter)
-
-	// For example purposes, sample every trace.
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	http.ListenAndServe(":"+*port, nil)
 }

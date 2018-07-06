@@ -2,101 +2,22 @@ package main
 
 import (
 	"bufio"
-	"math/rand"
-	// "encoding/hex"
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
-	// "time"
 
 	"golang.org/x/net/context"
-	// "google.golang.org/api/option"
 	"google.golang.org/grpc"
 	metadata "google.golang.org/grpc/metadata"
 	pb "istio-stackdriver/helloworld"
-	//	"go.opencensus.io/exporter/stackdriver"
-	//	"go.opencensus.io/trace"
 )
 
 var (
 	port = flag.String("port", "50051", "grpc port")
 )
-
-//func buildTraceID(s string) ([16]byte, error) {
-//	tid := [16]byte{}
-//
-//	l := hex.DecodedLen(len(s))
-//	decoded, err := hex.DecodeString(s)
-//
-//	if err != nil {
-//		return tid, err
-//	}
-//	for i := 0; i < 16; i++ {
-//		if i < 16-l {
-//			tid[i] = 0
-//		} else {
-//			tid[i] = decoded[l+i-16]
-//		}
-//	}
-//	return tid, err
-//}
-
-// func buildSpanID(s string) ([8]byte, error) {
-//	sid := [8]byte{}
-//
-//	l := hex.DecodedLen(len(s))
-//	decoded, err := hex.DecodeString(s)
-//
-//	if err != nil {
-//		return sid, err
-//	}
-//	for i := 0; i < 8; i++ {
-//		if i < 8-l {
-//			sid[i] = 0
-//		} else {
-//			sid[i] = decoded[l+i-8]
-//		}
-//	}
-//	return sid, nil
-// }
-
-//func execWorkflow(md metadata.MD) {
-//	vals := md.Get("x-b3-traceid")
-//	if len(vals) == 0 {
-//		fmt.Println("Cannot find trace id")
-//	}
-//	tid, err := buildTraceID(vals[0])
-//	if err != nil {
-//		fmt.Println(err)
-//		return
-//	}
-//	vals = md.Get("x-b3-spanid")
-//	if len(vals) == 0 {
-//		fmt.Println("Cannot find span id")
-//	}
-//	sid, err := buildSpanID(vals[0])
-//	if err != nil {
-//		fmt.Println(err)
-//		return
-//	}
-//
-//	p := trace.SpanContext{
-//		TraceID:      tid,
-//		SpanID:       sid,
-//		TraceOptions: 0x1,
-//	}
-//
-//	ctx, span := trace.StartSpanWithRemoteParent(context.Background(), "svc-b-foo", p)
-//	_, span1 := trace.StartSpan(ctx, "svc-b-bar")
-//	time.Sleep(50 * time.Millisecond)
-//	span1.End()
-//	_, span2 := trace.StartSpan(ctx, "svc-b-baz")
-//	time.Sleep(50 * time.Millisecond)
-//	span2.End()
-//	span.End()
-//}
 
 func extractHeaders(md metadata.MD) map[string]string {
 	headers := []string{
@@ -121,24 +42,6 @@ func extractHeaders(md metadata.MD) map[string]string {
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
-
-func (s *server) visitGoogle(md metadata.MD) (string, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://www.google.com:443", nil)
-	eh := extractHeaders(md)
-	for k, v := range eh {
-		req.Header.Add(k, v)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("visit google error: %s", err)
-		return "", err
-	}
-	defer resp.Body.Close()
-	log.Printf("Visit google.com: %v", resp.StatusCode)
-	return fmt.Sprintf("Get response status code %v from google", resp.StatusCode), nil
-}
 
 func (s *server) visitHttpbin(md metadata.MD) (string, error) {
 	client := &http.Client{}
@@ -190,27 +93,11 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 		} else {
 			m += gm + "\n"
 		}
-		//	if gm, err := s.visitGoogle(md); err != nil {
-		//		return nil, fmt.Errorf("failed to visit google.com")
-		//	} else {
-		//		m += gm + "\n"
-		//	}
 	}
-	// execWorkflow(md)
 	return &pb.HelloReply{Message: m}, nil
 }
 
 func main() {
-	//	exporter, err := stackdriver.NewExporter(stackdriver.Options{
-	//		BundleDelayThreshold: time.Second / 10,
-	//		BundleCountThreshold: 5,
-	//	})
-	//	if err != nil {
-	//		log.Println(err)
-	//	}
-	//	trace.RegisterExporter(exporter)
-	//	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-
 	lis, err := net.Listen("tcp", ":"+*port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
