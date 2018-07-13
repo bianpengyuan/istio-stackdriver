@@ -23,7 +23,7 @@ metadata:
   name: default
   namespace: istio-system
 spec:
-  timestamp: request.time
+  timestamp: request.time | context.time
   sourceUid: source.uid | "Unknown"
   sourceOwner: source.owner | "Unknown"
   sourceWorkloadName: source.workload.name | "Unknown"
@@ -35,49 +35,17 @@ spec:
   contextProtocol: context.protocol | "Unknown"
   apiProtocol: api.protocol | "Unknown"
 ---
-apiVersion: "config.istio.io/v1alpha2"
-kind: edge
-metadata:
-  name: tcp
-  namespace: istio-system
-spec:
-  timestamp: context.time
-  sourceUid: source.uid | "Unknown"
-  sourceOwner: source.owner | "Unknown"
-  sourceWorkloadName: source.workload.name | "Unknown"
-  sourceWorkloadNamespace: source.workload.namespace | "Unknown"
-  destinationUid: destination.uid | "Unknown"
-  destinationOwner: destination.owner | "Unknown"
-  destinationWorkloadName: destination.workload.name | "Unknown"
-  destinationWorkloadNamespace: destination.workload.namespace | "Unknown"
-  contextProtocol: context.protocol | "Unknown"
-  apiProtocol: api.protocol | "Unknown"
----
-# Rule to send edge instances to the stackdriver handler
 apiVersion: "config.istio.io/v1alpha2"
 kind: rule
 metadata:
   name: edgetosd
   namespace: istio-system
 spec:
-  match: (source.uid | "unknown" != "unknown") && (context.reporter.kind | "inbound" == "inbound") && (context.protocol == "grpc" || context.protocol == "http")
+  match: (context.reporter.kind | "inbound" == "inbound") && (context.protocol | "unknown" != "unknown")
   actions:
    - handler: context-handler.stackdriver
      instances:
      - default.edge
----
-# Rule to send edge instances to the stackdriver handler
-apiVersion: "config.istio.io/v1alpha2"
-kind: rule
-metadata:
-  name: edgetosd-tcp
-  namespace: istio-system
-spec:
-  match: (source.uid | "unknown" != "unknown") && (context.reporter.kind | "inbound" == "inbound") && (context.protocol == "tcp")
-  actions:
-   - handler: context-handler.stackdriver
-     instances:
-     - tcp.edge
 ---
 # Rule to send edge instances to the stackdriver handler
 apiVersion: "config.istio.io/v1alpha2"
@@ -86,21 +54,9 @@ metadata:
   name: edgetosd-stage
   namespace: istio-system
 spec:
-  match: (source.uid | "unknown" != "unknown") && (context.reporter.kind | "inbound" == "inbound") && (context.protocol == "grpc" || context.protocol == "http")
+  match: (context.reporter.kind | "inbound" == "inbound") && (context.protocol | "unknown" != "unknown")
   actions:
    - handler: context-handler-stage.stackdriver
      instances:
      - default.edge
 ---
-# Rule to send edge instances to the stackdriver handler
-apiVersion: "config.istio.io/v1alpha2"
-kind: rule
-metadata:
-  name: edgetosd-tcp-stage
-  namespace: istio-system
-spec:
-  match: (source.uid | "unknown" != "unknown") && (context.reporter.kind | "inbound" == "inbound") && (context.protocol == "tcp")
-  actions:
-   - handler: context-handler-stage.stackdriver
-     instances:
-     - tcp.edge

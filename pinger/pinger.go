@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"time"
@@ -9,6 +10,10 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+)
+
+var (
+	trafficRate = flag.Int("traffic-rate", 100, "traffic rate")
 )
 
 func getIngressIP() string {
@@ -50,7 +55,7 @@ func getIngressIP() string {
 func main() {
 	ip := getIngressIP()
 	log.Printf("the ip address of gateway is %v", ip)
-	rate := time.Second / 100
+	rate := time.Second / time.Duration(*trafficRate)
 	throttle := time.Tick(rate)
 	for {
 		<-throttle

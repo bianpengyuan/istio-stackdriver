@@ -23,15 +23,15 @@ spec:
   rewriteClientSpanId: "true"
   spanTags:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"

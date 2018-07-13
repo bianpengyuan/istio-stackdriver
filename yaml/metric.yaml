@@ -85,6 +85,9 @@ spec:
       value: 2 # INT64
       metric_type: "istio.io/service/client/sent_bytes_count"
 ---
+#################################################
+############## Metric Config ####################
+#################################################
 apiVersion: "config.istio.io/v1alpha2"
 kind: rule
 metadata:
@@ -150,15 +153,15 @@ spec:
   value: "1"
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -182,15 +185,15 @@ spec:
   value: "1"
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -213,15 +216,15 @@ spec:
   value: request.total_size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -245,15 +248,15 @@ spec:
   value: request.total_size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -261,8 +264,6 @@ spec:
     destination_owner: destination.owner | "unknown"
   monitoredResourceType: '"k8s_pod"'
   monitoredResourceDimensions:
-    # When using the global MR, this must be filled in, preferably matching the
-    # project_id given above in stackdriver config.
     project_id: '""'
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
@@ -278,15 +279,15 @@ spec:
   value: response.total_size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -310,15 +311,15 @@ spec:
   value: response.total_size
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -341,15 +342,15 @@ spec:
   value: response.duration
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -373,15 +374,15 @@ spec:
   value: response.duration
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
-    request_operation: request.method | "unknown"
+    request_operation: conditional((context.protocol | "unknown") == "grpc", request.path | "unknown", request.method | "unknown")
     request_protocol: context.protocol | "unknown"
     api_version: api.version | "unknown"
     api_name: api.service | "unknown"
     response_code: response.code | 0
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -404,11 +405,11 @@ spec:
   value: connection.received.bytes | 0
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -432,11 +433,11 @@ spec:
   value: connection.received.bytes | 0
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -459,11 +460,11 @@ spec:
   value: connection.sent.bytes | 0
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -487,11 +488,11 @@ spec:
   value: connection.sent.bytes | 0
   dimensions:
     destination_service_name: destination.service.name | "unknown"
-    destination_service_namespace: destination.namespace | "unknown"
+    destination_service_namespace: destination.service.namespace | "unknown"
     destination_port: destination.port | 0
     request_protocol: context.protocol | "unknown"
-    service_authentication_policy: conditional(connection.mtls | false, "MTLS" , "NONE")
-    source_workload_namespace: source.namespace | "unknown"
+    service_authentication_policy: conditional((context.reporter.kind | "inbound") == "outbound", "unknown", conditional(connection.mtls | false, "mutual_tls", "none"))
+    source_workload_namespace: source.workload.namespace | "unknown"
     source_workload_name: source.workload.name | "unknown"
     source_owner: source.owner | "unknown"
     destination_workload_namespace: destination.workload.namespace | "unknown"
@@ -504,3 +505,4 @@ spec:
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
     pod_name: destination.name | "unknown"
+---
