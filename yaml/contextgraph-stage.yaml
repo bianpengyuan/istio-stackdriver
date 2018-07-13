@@ -1,0 +1,23 @@
+apiVersion: "config.istio.io/v1alpha2"
+kind: stackdriver
+metadata:
+  name: context-handler-stage
+  namespace: istio-system
+spec:
+  endpoint: staging-contextgraph.sandbox.googleapis.com:443
+  project_id: csm-metrics-test
+  service_account_path: /sd-account/sa.json
+---
+# Rule to send edge instances to the stackdriver handler
+apiVersion: "config.istio.io/v1alpha2"
+kind: rule
+metadata:
+  name: edgetosd-stage
+  namespace: istio-system
+spec:
+  match: (context.reporter.kind | "inbound" == "inbound") && (context.protocol | "unknown" != "unknown")
+  actions:
+   - handler: context-handler-stage.stackdriver
+     instances:
+     - default.edge
+---
