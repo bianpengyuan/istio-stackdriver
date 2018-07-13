@@ -9,6 +9,7 @@ spec:
   logInfo:
     server-accesslog-stackdriver.logentry.istio-system:
       labelNames:
+      - source_uid
       - source_ip
       - source_app
       - source_principal
@@ -16,6 +17,7 @@ spec:
       - source_workload
       - source_namespace
       - source_owner
+      - destination_uid
       - destination_app
       - destination_ip
       - destination_service_host
@@ -48,6 +50,7 @@ spec:
       labelNames:
       - connection_id
       - connection_event
+      - source_uid
       - source_ip
       - source_app
       - source_principal
@@ -55,6 +58,7 @@ spec:
       - source_workload
       - source_namespace
       - source_owner
+      - destination_uid
       - destination_app
       - destination_ip
       - destination_service_host
@@ -83,6 +87,7 @@ spec:
   severity: '"Info"'
   timestamp: request.time
   variables:
+    source_uid: source.uid | ""
     source_ip: source.ip | ip("0.0.0.0")
     source_app: source.labels["app"] | ""
     source_principal: source.principal | ""
@@ -90,6 +95,7 @@ spec:
     source_workload: source.workload.name | ""
     source_namespace: source.namespace | ""
     source_owner: source.owner | ""
+    destination_uid: destination.uid | ""
     destination_app: destination.labels["app"] | ""
     destination_ip: destination.ip | ip("0.0.0.0")
     destination_service_host: destination.service.host | ""
@@ -138,6 +144,7 @@ spec:
   variables:
     connection_id: connection.id | ""
     connection_event: connection.event | ""
+    source_uid: source.uid | ""
     source_ip: source.ip | ip("0.0.0.0")
     source_app: source.labels["app"] | ""
     source_principal: source.principal | ""
@@ -145,6 +152,7 @@ spec:
     source_workload: source.workload.name | ""
     source_namespace: source.namespace | ""
     source_owner: source.owner | ""
+    destination_uid: destination.uid | ""
     destination_app: destination.labels["app"] | ""
     destination_ip: destination.ip | ip("0.0.0.0")
     destination_service_host: destination.service.host | ""
