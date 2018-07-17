@@ -1,0 +1,23 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: svc-b
+spec:
+  hosts:
+  - svc-b
+  http:
+  - route:
+    - destination:
+        host: svc-b
+        subset: v2
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: svc-b
+spec:
+  host: svc-b
+  subsets:
+  - name: v2
+    labels:
+      version: v2

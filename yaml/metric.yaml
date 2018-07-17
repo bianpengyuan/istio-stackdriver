@@ -173,7 +173,7 @@ spec:
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: destination.container.name | "unknown"
+    container_name: conditional((destination.name | "unknown").startsWith("istio-telemetry") || (destination.name | "unknown").startsWith("istio-policy"), "mixer", destination.container.name | "unknown")
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -236,7 +236,7 @@ spec:
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: destination.container.name | "unknown"
+    container_name: conditional((destination.name | "unknown").startsWith("istio-telemetry") || (destination.name | "unknown").startsWith("istio-policy"), "mixer", destination.container.name | "unknown")
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -299,7 +299,7 @@ spec:
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: destination.container.name | "unknown"
+    container_name: conditional((destination.name | "unknown").startsWith("istio-telemetry") || (destination.name | "unknown").startsWith("istio-policy"), "mixer", destination.container.name | "unknown")
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -362,7 +362,7 @@ spec:
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: destination.container.name | "unknown"
+    container_name: conditional((destination.name | "unknown").startsWith("istio-telemetry") || (destination.name | "unknown").startsWith("istio-policy"), "mixer", destination.container.name | "unknown")
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -421,7 +421,7 @@ spec:
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: destination.container.name | "unknown"
+    container_name: conditional((destination.name | "unknown").startsWith("istio-telemetry") || (destination.name | "unknown").startsWith("istio-policy"), "mixer", destination.container.name | "unknown")
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
@@ -476,7 +476,7 @@ spec:
     cluster_name: '""'
     namespace_name: destination.workload.namespace | "unknown"
     location: '""'
-    container_name: destination.container.name | "unknown"
+    container_name: conditional((destination.name | "unknown").startsWith("istio-telemetry") || (destination.name | "unknown").startsWith("istio-policy"), "mixer", destination.container.name | "unknown")
     pod_name: destination.name | "unknown"
 ---
 apiVersion: "config.istio.io/v1alpha2"
