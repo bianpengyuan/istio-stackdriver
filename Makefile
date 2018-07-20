@@ -50,7 +50,16 @@ docker.push:
 	gcloud docker -- push $(HUB)/svc-c:$(TAG)
 	gcloud docker -- push $(HUB)/pinger:$(TAG)
 
-deploy:
+deploy.svc:
+	cd https-nginx && \
+	$(MAKE) keys KEY=/tmp/nginx.key CERT=/tmp/nginx.crt && \
+	kubectl create secret tls nginxsecret --key /tmp/nginx.key --cert /tmp/nginx.crt && \
+	kubectl create configmap nginxconfigmap --from-file=default.conf && \
+	cd .. && \
+	kubectl label namespace default istio-injection=enabled && \
+	kubectl apply -f yaml/svc.yaml
+
+deploy.sd:
 	kubectl apply -f <(${ISTIO_OUT}/istioctl kube-inject -f yaml/svc.yaml --hub=${ISTIO_HUB} --tag=${ISTIO_TAG}) && \
 	kubectl apply -f yaml/pinger.yaml && \
 	kubectl apply -f yaml/metric.yaml && \

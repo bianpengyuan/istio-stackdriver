@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"log"
 	"net/http"
@@ -53,16 +54,39 @@ func getIngressIP() string {
 }
 
 func main() {
-	ip := getIngressIP()
-	log.Printf("the ip address of gateway is %v", ip)
 	rate := time.Second / time.Duration(*trafficRate)
 	throttle := time.Tick(rate)
+	refreshIPCounter := 10000
+	ip := "127.0.0.1"
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	for {
+		if refreshIPCounter == 10000 {
+			refreshIPCounter = 0
+			ip = getIngressIP()
+			log.Printf("the ip address of gateway is %v", ip)
+		}
+		refreshIPCounter++
 		<-throttle
 		go func() {
 			resp, err := http.Get("http://" + ip + "/")
 			if resp != nil && resp.Body != nil {
 				resp.Body.Close()
+			}
+			if err != nil {
+				log.Printf("Error http request %v", err)
+			}
+
+			nginxResp, err := http.Get("http://" + ip + "/nginx")
+			if nginxResp != nil && nginxResp.Body != nil {
+				nginxResp.Body.Close()
+			}
+			if err != nil {
+				log.Printf("Error http request %v", err)
+			}
+
+			nginxHTTPSResp, err := http.Get("https://" + ip + ":443/index.html")
+			if nginxHTTPSResp != nil && nginxHTTPSResp.Body != nil {
+				nginxHTTPSResp.Body.Close()
 			}
 			if err != nil {
 				log.Printf("Error http request %v", err)

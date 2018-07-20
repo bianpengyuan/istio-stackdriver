@@ -103,24 +103,66 @@ spec:
         ports:
         - containerPort: 23333
 ---
+##################################################################################################
+# Svc Ngnix
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxsvc
+  labels:
+    app: nginx
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: nginx
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: my-nginx
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: nginxsecret
+      - name: configmap-volume
+        configMap:
+          name: nginxconfigmap
+      containers:
+      - name: nginxhttps
+        image: ymqytw/nginxhttps:1.5
+        command: ["/home/auto-reload-nginx.sh"]
+        ports:
+        - containerPort: 443
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /index.html
+            port: 80
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
+        volumeMounts:
+        - mountPath: /etc/nginx/ssl
+          name: secret-volume
+        - mountPath: /etc/nginx/conf.d
+          name: configmap-volume
+---
 ###########################################################################
 # Ingress resource (gateway)
 ##########################################################################
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: gateway
-  annotations:
-    kubernetes.io/ingress.class: "istio"
-spec:
-  rules:
-  - http:
-      paths:
-      - path: /
-        backend:
-          serviceName: svc-a
-          servicePort: 80
----
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -133,6 +175,24 @@ spec:
       number: 80
       name: http
       protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 23333
+      name: http-dashboard
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 9090
+      name: http-prom
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 443
+      name: tcp
+      protocol: TCP
     hosts:
     - "*"
 ---
@@ -148,12 +208,50 @@ spec:
   http:
   - match:
     - uri:
-        exact: /
+        prefix: "/"
+      port: 23333
+    route:
+    - destination:
+        host: grafana.istio-system.svc.cluster.local
+        port:
+          number: 3000
+  - match:
+    - uri:
+        prefix: "/"
+      port: 9090
+    route:
+    - destination:
+        host: prometheus.istio-system.svc.cluster.local
+        port:
+          number: 9090
+  - match:
+    - uri:
+        exact: "/"
+      port: 80
     route:
     - destination:
         host: svc-a
         port:
           number: 80
+  - match:
+    - uri:
+        exact: "/nginx"
+      port: 80
+    rewrite:
+      uri: "/index.html"
+    route:
+    - destination:
+        host: nginxsvc
+        port:
+          number: 80
+  tcp:
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: nginxsvc
+        port:
+          number: 443
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
